@@ -1,4 +1,10 @@
+/*
+ * Copyright (c) 2026 Nitin Chauhan / EdgeBridge-S3
+ * SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-EdgeBridge-Commercial
+ */
+
 #include "eb_web_analyzer.h"
+#include "eb_version.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -160,11 +166,12 @@ int eb_web_format_full_diagnostics_json(char *out_buf, size_t buf_len,
 
     int ext = snprintf(
         out_buf + pos, buf_len - pos,
-        ",\"watchdog_remaining_sec\":%u,"
+        ",\"fw_version\":\"%s\",\"watchdog_remaining_sec\":%u,"
         "\"mqtt\":{\"wifi_up\":%s,\"connected\":%s,\"published\":%u,\"failures\":%u,\"outages\":%u},"
         "\"ota\":{\"confirmed\":%s,\"net_ok\":%s,\"bus_ok\":%s,\"status\":\"%s\",\"bytes\":%zu,\"total\":%zu},"
         "\"memory\":{\"internal_sram_pct\":%u,\"psram_active\":%s,\"psram_total\":%u,\"psram_used\":%u}"
         "}",
+        EB_FW_VERSION_STR,
         rem,
         (ctx->mqtt && ctx->mqtt->wifi_connected) ? "true" : "false",
         (ctx->mqtt && ctx->mqtt->mqtt_connected) ? "true" : "false",

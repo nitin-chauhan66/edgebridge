@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Nitin Chauhan / EdgeBridge-S3
+ * SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-EdgeBridge-Commercial
+ */
+
 #ifndef EB_STORAGE_H
 #define EB_STORAGE_H
 

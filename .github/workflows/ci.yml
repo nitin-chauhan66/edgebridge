@@ -1,0 +1,39 @@
+name: EdgeBridge-S3 Phase 0 CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  host-tests:
+    name: C11 Unit, Torture & 7-Day Sim (ASan/UBSan)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run Phase 0 Test Suite
+        run: |
+          chmod +x tests/run_tests.sh
+          ./tests/run_tests.sh
+
+  docs-and-profiles:
+    name: Validate Docs App & Device Profiles
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate docs/app.js syntax
+        run: node --check docs/app.js
+      - name: Validate profiles/*.json
+        run: |
+          for f in profiles/*.json; do
+            echo "Checking $f"
+            python3 -m json.tool "$f" > /dev/null
+          done

@@ -1,5 +1,10 @@
 /*
- * EdgeBridge-S3 Phase 0 — Zephyr RTOS Entry Point
+ * Copyright (c) 2026 Nitin Chauhan / EdgeBridge-S3
+ * SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-EdgeBridge-Commercial
+ */
+
+/*
+ * EdgeBridge-S3 Phase 0 â€” Zephyr RTOS Entry Point
  * Target: Waveshare ESP32-S3-RS485-CAN (16MB Flash + 8MB Octal PSRAM)
  */
 
@@ -14,6 +19,7 @@
 #include "eb_rs485.h"
 #include "eb_scanner.h"
 #include "eb_storage.h"
+#include "eb_version.h"
 #include "eb_web_analyzer.h"
 
 #ifdef __ZEPHYR__
@@ -579,7 +585,7 @@ int main(void) {
     }
 #endif
 
-    LOG_INF("EdgeBridge-S3 Phase 0 ready (Waveshare ESP32-S3-RS485-CAN)");
+    LOG_INF("EdgeBridge-S3 %s ready (Waveshare ESP32-S3-RS485-CAN)", EB_FW_VERSION_STR);
     return 0;
 }
 #endif /* __ZEPHYR__ */

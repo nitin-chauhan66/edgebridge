@@ -501,6 +501,7 @@ window.selectProfile = function (k) {
 
 function renderApi() {
   const diagSample = `{
+  "fw_version": "0.1.0-phase0",
   "rs485": { "baud": 115200, "t35_us": 2000, "adaptive_us": 0, "auto_dir": true, "tx": 120, "rx": 120, "crc_err": 0, "clipped_err": 0 },
   "can": { "bitrate": 500000, "state": "ERROR_ACTIVE", "tec": 0, "rec": 0, "ack_ok": 45, "ack_miss": 0, "bus_off": 0, "peer_ack": true },
   "storage": { "buffered": 0, "capacity": 16384, "overwritten": 0, "corrupt_skipped": 0 },
@@ -571,6 +572,12 @@ function renderDeployment() {
       2. Tap and release <strong>RESET</strong> while keeping BOOT held.<br>
       3. Release <strong>BOOT</strong>, then run <code>west flash</code>.<br>
       4. Press <strong>RESET</strong> once flashing completes. Deferred USB CDC-ACM logging ensures boot never hangs even with no serial monitor attached.
+    </div>
+
+    <h2 class="section-title">4. Aligned Build Components &amp; Dual Licensing</h2>
+    <div class="callout ok">
+      <strong>License:</strong> Dual-licensed under <code>GNU GPL-3.0-only</code> (free for developers &amp; open-source projects) or <code>LicenseRef-EdgeBridge-Commercial</code> (required for proprietary/closed-source commercial OEM products).<br>
+      <strong>ESP32-S3 Build BOM (<code>west.yml</code>):</strong> Zephyr <code>v3.7.0</code> (Apache-2.0), <code>hal_espressif</code> (Apache-2.0 + Sec. 7 radio blob exception), <code>mcuboot</code> (Apache-2.0), <code>mbedtls</code> (Apache-2.0 OR GPL-2.0+), <code>zcbor</code> (Apache-2.0), <code>littlefs</code> (BSD-3-Clause), <code>picolibc</code> (BSD-3-Clause), <code>tinycrypt</code> (BSD-3-Clause / BSD-2-Clause).
     </div>
   `;
 }

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Nitin Chauhan / EdgeBridge-S3
+ * SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-EdgeBridge-Commercial
+ */
+
 #include "eb_ble_prov.h"
 #include "eb_can.h"
 #include "eb_config.h"
@@ -541,6 +546,7 @@ static void test_5min_commissioning_web_and_ota(void) {
     assert(eb_web_handle_http(&web, "GET", "/api/v1/diagnostics", NULL, 0U,
                               &status, &ctype, resp, sizeof(resp)) > 0);
     assert(status == 200 && strstr(resp, "\"internal_sram_pct\":22") != NULL);
+    assert(strstr(resp, "\"fw_version\":\"0.1.0-phase0\"") != NULL);
     assert(eb_web_handle_http(&web, "GET", "/api/v1/telemetry", NULL, 0U,
                               &status, &ctype, resp, sizeof(resp)) > 0);
     assert(status == 200 && strstr(resp, "\"metrics\":") != NULL);

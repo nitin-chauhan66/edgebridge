@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Nitin Chauhan / EdgeBridge-S3
+ * SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-EdgeBridge-Commercial
+ */
+
 #include "eb_crc.h"
 
 uint32_t eb_crc32_ieee(const void *data, size_t len) {

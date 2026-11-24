@@ -1,4 +1,9 @@
-# EdgeBridge-S3 — Phase 0 Firmware (Waveshare ESP32-S3-RS485-CAN)
+# EdgeBridge-S3 — Phase 0 Firmware (`v0.1.0-phase0`)
+
+[![EdgeBridge-S3 Phase 0 CI](https://github.com/nitin-chauhan66/edgebridge/actions/workflows/ci.yml/badge.svg)](https://github.com/nitin-chauhan66/edgebridge/actions/workflows/ci.yml)
+[![Deploy EdgeBridge-S3 Docs to GitHub Pages](https://github.com/nitin-chauhan66/edgebridge/actions/workflows/pages.yml/badge.svg)](https://nitin-chauhan66.github.io/edgebridge/)
+
+**Interactive Documentation App:** https://nitin-chauhan66.github.io/edgebridge/
 
 **EdgeBridge-S3** is a self-healing RS-485 & CAN edge gateway with a built-in Web Bus Analyzer, built on **Zephyr RTOS + MCUboot + LittleFS** for the **ESP32-S3R8 (16 MB Flash + 8 MB Octal PSRAM)**.
 
@@ -44,10 +49,10 @@ Phase 0 targets **zero-capex deployment** on the off-the-shelf [Waveshare ESP32-
    - **Power-Cut Resilience:** Dual alternating superblocks + per-record IEEE CRC-32 (`eb_crc.c`) + crash-replay recovery skip half-written slots without corrupting the ring.
    - **60s Config Watchdog & Crash Rollback:** Unconfirmed network/bus config changes auto-revert after 60 seconds OR immediately on reboot if a crash occurs prior to confirmation.
 
-## Web Bus Analyzer REST API (`eb_web_analyzer.h`)
+## Web Bus Analyzer REST API (`include/eb_web_analyzer.h`)
 
 - `GET /` — Mobile-first Bus Analyzer & 5-minute commissioning UI
-- `GET /api/v1/diagnostics` — RS-485, CAN, LittleFS, Config Watchdog, MQTT, OTA, and SRAM/PSRAM stats
+- `GET /api/v1/diagnostics` — Firmware version, RS-485, CAN, LittleFS, Config Watchdog, MQTT, OTA, and SRAM/PSRAM stats
 - `GET /api/v1/telemetry` — Live decoded BMS/inverter engineering values + recent RS-485/CAN frames
 - `GET|POST /api/v1/scan` — RS-485 baud/slave-ID & listen-only CAN bitrate auto-scanner (`eb_scanner.c`)
 - `GET|POST /api/v1/profiles` — Built-in (`jk_bms_modbus_v1`, `pylontech_can_v1`, `deye_inverter_modbus_v1`, `growatt_inverter_modbus_v1`) & custom JSON profiles
@@ -56,7 +61,7 @@ Phase 0 targets **zero-capex deployment** on the off-the-shelf [Waveshare ESP32-
 
 ## Building & Running Tests
 
-To run the host-side C unit, 500-cycle power-cut torture, and 7-day high-rate polling simulation tests (compiles with `-Wall -Wextra -Werror -fsanitize=address,undefined`):
+### Host Verification Suite (`-Wall -Wextra -Werror -fsanitize=address,undefined`)
 
 ```bash
 cd tests
@@ -64,10 +69,32 @@ chmod +x run_tests.sh
 ./run_tests.sh
 ```
 
-To build the Zephyr RTOS firmware for the Waveshare ESP32-S3-RS485-CAN (requires Zephyr SDK & `west`):
+### Zephyr RTOS + MCUboot Firmware (`west.yml`)
 
 ```bash
-west build -b esp32s3_devkitm/esp32s3/procpu --sysbuild . -- \
-  -DDTC_OVERLAY_FILE=boards/waveshare_esp32s3_rs485_can.overlay
+# 1. Initialize west workspace (first time)
+west init -l .
+west update
+west blobs fetch hal_espressif
+
+# 2. Generate a local dev signing key (NEVER commit production keys!) and build
+chmod +x scripts/gen_dev_keys.sh scripts/build_phase0.sh
+./scripts/build_phase0.sh
 west flash
 ```
+
+## Licensing (Dual-License: GNU GPL v3.0 + Commercial OEM)
+
+EdgeBridge-S3 is dual-licensed (`GPL-3.0-only OR LicenseRef-EdgeBridge-Commercial`):
+
+- **Open Source (`GPL-3.0-only`):** Free for developers, installers, and open-source GPLv3 projects (with a GPLv3 Section 7 permission for unmodified Espressif SoC radio blobs in `hal_espressif`).
+- **Commercial OEM License:** Organizations embedding EdgeBridge-S3 into proprietary or closed-source commercial products require a Commercial License — see [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md).
+
+## Release, Components & Governance
+
+- [CHANGELOG.md](CHANGELOG.md) — Release history (`v0.1.0-phase0`)
+- [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) — Aligned ESP32-S3 build BOM (`zephyr v3.7.0`, `hal_espressif`, `mcuboot`, `littlefs`, `mbedtls`, `picolibc`, `tinycrypt`, `zcbor`)
+- [NOTICE](NOTICE) & [LICENSES/Apache-2.0.txt](LICENSES/Apache-2.0.txt) — Upstream Apache-2.0 & BSD attributions
+- [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md) — Dual-licensing & OEM terms
+- [SECURITY.md](SECURITY.md) — MCUboot ECDSA-P256 key handling & reporting policy
+- [LICENSE](LICENSE) — GNU General Public License v3.0
