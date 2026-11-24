@@ -1,0 +1,52 @@
+mainmenu "EdgeBridge-S3 Phase 0 Configuration"
+
+menu "EdgeBridge-S3 Gateway"
+
+config EDGEBRIDGE_RS485_DEFAULT_BAUD
+	int "Default RS-485 baud rate"
+	default 9600
+	help
+	  Default Modbus RTU baud rate for RS-485 polling.
+
+config EDGEBRIDGE_RS485_BAUD_CEILING
+	int "RS-485 verified isolator baud ceiling (bps)"
+	default 115200
+	help
+	  Waveshare isolated RS-485 transceiver practical limit due to
+	  optocoupler/digital isolator propagation delay.
+
+config EDGEBRIDGE_RS485_AUTO_DIRECTION
+	bool "Use hardware auto-direction RS-485 transceiver (Waveshare default)"
+	default y
+	help
+	  Waveshare ESP32-S3-RS485-CAN switches TX/RX direction automatically
+	  in hardware without a DE/RE GPIO. Disable only if using an external
+	  transceiver wired to the optional DE/RE GPIO.
+
+config EDGEBRIDGE_CONFIG_WATCHDOG_SEC
+	int "Config rollback watchdog timeout (seconds)"
+	default 60
+	help
+	  Seconds before unconfirmed network/bus config changes auto-revert.
+
+config EDGEBRIDGE_LITTLEFS_RING_MAX_RECORDS
+	int "Maximum circular telemetry records in LittleFS"
+	default 16384
+	help
+	  Capacity of the circular store-and-forward ring buffer.
+
+config EDGEBRIDGE_BLE_PROV_TIMEOUT_SEC
+	int "Ephemeral BLE provisioning window (seconds)"
+	default 300
+	help
+	  Automatically shut down BLE if provisioning completes or times out.
+
+config EDGEBRIDGE_OTA_CONFIRM_STABLE_SEC
+	int "Healthy runtime seconds required before confirming MCUboot OTA slot"
+	default 30
+	help
+	  Minimum sustained network + bus health before boot_write_img_confirmed().
+
+endmenu
+
+source "Kconfig.zephyr"

@@ -1,0 +1,36 @@
+{
+  "profile_id": "jk_bms_modbus_v1",
+  "device_name": "JK-PB BMS (RS-485 Modbus RTU)",
+  "bus": "rs485",
+  "default_baud": 115200,
+  "slave_id": 1,
+  "poll_interval_ms": 1000,
+  "turnaround_guard_us": 2000,
+  "registers": [
+    {
+      "name": "pack_voltage_v",
+      "func": 3,
+      "address": 4608,
+      "length": 1,
+      "scale": 0.01,
+      "unit": "V"
+    },
+    {
+      "name": "pack_current_a",
+      "func": 3,
+      "address": 4609,
+      "length": 2,
+      "signed": true,
+      "scale": 0.001,
+      "unit": "A"
+    },
+    {
+      "name": "soc_percent",
+      "func": 3,
+      "address": 4611,
+      "length": 1,
+      "scale": 1.0,
+      "unit": "%"
+    }
+  ]
+}

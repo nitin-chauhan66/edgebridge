@@ -1,0 +1,66 @@
+{
+  "profile_id": "pylontech_can_v1",
+  "device_name": "Pylontech/Victron CAN BMS (500 kbps)",
+  "bus": "can",
+  "default_baud": 500000,
+  "slave_id": 1,
+  "poll_interval_ms": 1000,
+  "registers": [
+    {
+      "name": "charge_voltage_limit_v",
+      "can_id": 849,
+      "byte_offset": 0,
+      "length": 2,
+      "little_endian": true,
+      "scale": 0.1,
+      "unit": "V"
+    },
+    {
+      "name": "soc_percent",
+      "can_id": 853,
+      "byte_offset": 0,
+      "length": 2,
+      "little_endian": true,
+      "scale": 1.0,
+      "unit": "%"
+    },
+    {
+      "name": "soh_percent",
+      "can_id": 853,
+      "byte_offset": 2,
+      "length": 2,
+      "little_endian": true,
+      "scale": 1.0,
+      "unit": "%"
+    },
+    {
+      "name": "pack_voltage_v",
+      "can_id": 854,
+      "byte_offset": 0,
+      "length": 2,
+      "little_endian": true,
+      "scale": 0.01,
+      "unit": "V"
+    },
+    {
+      "name": "pack_current_a",
+      "can_id": 854,
+      "byte_offset": 2,
+      "length": 2,
+      "signed": true,
+      "little_endian": true,
+      "scale": 0.1,
+      "unit": "A"
+    },
+    {
+      "name": "pack_temp_c",
+      "can_id": 854,
+      "byte_offset": 4,
+      "length": 2,
+      "signed": true,
+      "little_endian": true,
+      "scale": 0.1,
+      "unit": "C"
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+/*
+ * DeviceTree Overlay for Waveshare ESP32-S3-RS485-CAN (Phase 0 Target)
+ * Hardware References:
+ *   - RS-485 (Isolated, Hardware Auto-Direction): TX=GPIO17, RX=GPIO18
+ *   - Optional DE/RE GPIO (unused in hardware auto-dir mode): GPIO21
+ *   - CAN / TWAI (Isolated): TX=GPIO15, RX=GPIO16
+ *   - USB-C Native CDC-ACM: D-=GPIO19, D+=GPIO20
+ *   - Flash: 16MB (PRD v2.1 Partition Layout)
+ */
+
+/ {
+	chosen {
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,shell-uart = &cdc_acm_uart0;
+		zephyr,canbus = &twai;
+		zephyr,code-partition = &slot0_partition;
+	};
+
+	aliases {
+		rs485-uart = &uart1;
+		rs485-de-gpio = &rs485_de_pin;
+		watchdog0 = &wdt0;
+	};
+
+	rs485_ctrl {
+		compatible = "gpio-leds";
+		rs485_de_pin: rs485_de {
+			gpios = <&gpio0 21 GPIO_ACTIVE_HIGH>;
+			label = "Optional RS485 DE/RE Enable";
+		};
+	};
+
+	fstab {
+		compatible = "zephyr,fstab";
+		telemetry_lfs: telemetry_lfs {
+			compatible = "zephyr,fstab,littlefs";
+			mount-point = "/telemetry_fs";
+			partition = <&telemetry_fs_partition>;
+			automount;
+			read-size = <256>;
+			prog-size = <256>;
+			cache-size = <1024>;
+			lookahead-size = <256>;
+			block-cycles = <512>;
+		};
+	};
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+&pinctrl {
+	uart1_rs485_default: uart1_rs485_default {
+		group1 {
+			pinmux = <UART1_TX_GPIO17>;
+		};
+		group2 {
+			pinmux = <UART1_RX_GPIO18>;
+			bias-pull-up;
+		};
+	};
+
+	twai_can_default: twai_can_default {
+		group1 {
+			pinmux = <TWAI_TX_GPIO15>;
+		};
+		group2 {
+			pinmux = <TWAI_RX_GPIO16>;
+		};
+	};
+};
+
+&uart1 {
+	status = "okay";
+	current-speed = <9600>;
+	pinctrl-0 = <&uart1_rs485_default>;
+	pinctrl-names = "default";
+};
+
+&twai {
+	status = "okay";
+	pinctrl-0 = <&twai_can_default>;
+	pinctrl-names = "default";
+	bitrate = <500000>;
+};
+
+&wdt0 {
+	status = "okay";
+};
+
+&flash0 {
+	reg = <0x00000000 DT_SIZE_M(16)>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* 0x000000 (64 KB): MCUboot bootloader (ECDSA-P256) */
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 0x00010000>;
+		};
+
+		/* 0x010000 (4 MB): slot0 (Primary application image) */
+		slot0_partition: partition@10000 {
+			label = "image-0";
+			reg = <0x00010000 0x00400000>;
+		};
+
+		/* 0x410000 (4 MB): slot1 (Secondary OTA staging image) */
+		slot1_partition: partition@410000 {
+			label = "image-1";
+			reg = <0x00410000 0x00400000>;
+		};
+
+		/* 0x810000 (256 KB): scratch / swap metadata */
+		scratch_partition: partition@810000 {
+			label = "image-scratch";
+			reg = <0x00810000 0x00040000>;
+		};
+
+		/* 0x850000 (512 KB): nvs_config (Atomic active + backup) */
+		nvs_config_partition: partition@850000 {
+			label = "nvs_config";
+			reg = <0x00850000 0x00080000>;
+		};
+
+		/* 0x8D0000 (7.1 MB): telemetry_fs (LittleFS circular store-and-forward) */
+		telemetry_fs_partition: partition@8d0000 {
+			label = "telemetry_fs";
+			reg = <0x008d0000 0x00730000>;
+		};
+	};
+};

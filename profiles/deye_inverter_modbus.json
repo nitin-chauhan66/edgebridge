@@ -1,0 +1,45 @@
+{
+  "profile_id": "deye_inverter_modbus_v1",
+  "device_name": "Deye/Sunsynk Hybrid Inverter (RS-485)",
+  "bus": "rs485",
+  "default_baud": 9600,
+  "slave_id": 1,
+  "poll_interval_ms": 1000,
+  "turnaround_guard_us": 500,
+  "registers": [
+    {
+      "name": "battery_soc_pct",
+      "func": 3,
+      "address": 588,
+      "length": 1,
+      "scale": 1.0,
+      "unit": "%"
+    },
+    {
+      "name": "battery_power_w",
+      "func": 3,
+      "address": 590,
+      "length": 1,
+      "signed": true,
+      "scale": 1.0,
+      "unit": "W"
+    },
+    {
+      "name": "grid_power_w",
+      "func": 3,
+      "address": 625,
+      "length": 1,
+      "signed": true,
+      "scale": 1.0,
+      "unit": "W"
+    },
+    {
+      "name": "pv1_power_w",
+      "func": 3,
+      "address": 672,
+      "length": 1,
+      "scale": 1.0,
+      "unit": "W"
+    }
+  ]
+}

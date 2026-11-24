@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EdgeBridge-S3 Phase 0 — Docs &amp; Interactive Bus Analyzer</title>
+  <meta name="description" content="EdgeBridge-S3 Phase 0 documentation app for Waveshare ESP32-S3-RS485-CAN: Zephyr RTOS, MCUboot, LittleFS, Modbus RTU t3.5, CAN diagnostics, REST API, and test verification.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="icon-btn mobile-menu-btn" id="menuToggle" aria-label="Toggle Menu">&#9776;</button>
+      <a class="brand" href="#overview" onclick="navigate('overview')">
+        <span class="brand-mark">EB</span>
+        <span>EdgeBridge-S3</span>
+      </a>
+      <span class="version-pill">Phase 0 • PRD v2.1</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="search-btn" id="searchTrigger" title="Quick Search (Ctrl+K)">
+        <span>Search docs, pins, APIs...</span>
+        <span class="kbd">Ctrl K</span>
+      </button>
+      <button class="icon-btn" id="themeToggle" title="Toggle Dark/Light Theme">Theme</button>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="nav-group">
+        <div class="nav-group-title">Getting Started</div>
+        <button class="nav-item active" data-route="overview">
+          <span>Overview &amp; Quirks Solved</span>
+          <span class="nav-badge">Phase 0</span>
+        </button>
+        <button class="nav-item" data-route="hardware">
+          <span>Waveshare Pinout &amp; Flash</span>
+        </button>
+        <button class="nav-item" data-route="architecture">
+          <span>RTOS &amp; Self-Healing</span>
+        </button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Interactive Tools</div>
+        <button class="nav-item" data-route="simulator">
+          <span>Bus Analyzer &amp; t3.5 Lab</span>
+          <span class="nav-badge">Live</span>
+        </button>
+        <button class="nav-item" data-route="profiles">
+          <span>Device Profiles (JSON)</span>
+        </button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-title">Reference &amp; Ops</div>
+        <button class="nav-item" data-route="api">
+          <span>REST API &amp; MQTT</span>
+        </button>
+        <button class="nav-item" data-route="deployment">
+          <span>Build, Flash &amp; USB Trap</span>
+        </button>
+        <button class="nav-item" data-route="verification">
+          <span>Verification &amp; Torture Tests</span>
+          <span class="nav-badge">6/6</span>
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        <strong>Target Hardware</strong><br>
+        Waveshare <code>ESP32-S3-RS485-CAN</code><br>
+        ESP32-S3R8 • 16MB Flash • 8MB PSRAM<br>
+        Zephyr RTOS + MCUboot + LittleFS
+      </div>
+    </aside>
+
+    <main class="main-content" id="appRoot">
+      <!-- Dynamic view rendered by app.js -->
+    </main>
+  </div>
+
+  <!-- Command Palette Search Modal -->
+  <div class="modal-backdrop" id="searchModal" role="dialog" aria-modal="true">
+    <div class="modal">
+      <input class="modal-input" id="searchInput" type="text" placeholder="Type to jump: t3.5, GPIO17, LittleFS, /api/v1/scan, jk_bms, 500 cuts..." autocomplete="off">
+      <div class="modal-results" id="searchResults"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied to clipboard</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
