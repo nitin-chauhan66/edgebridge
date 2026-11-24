@@ -800,12 +800,19 @@ function renderRoute(route) {
   if (window.scrollTo) window.scrollTo(0, 0);
 }
 
+function setDrawerOpen(open) {
+  const sb = document.getElementById("sidebar");
+  const bd = document.getElementById("drawerBackdrop");
+  if (sb && sb.classList) sb.classList.toggle("open", open);
+  if (bd && bd.classList) bd.classList.toggle("open", open);
+}
+
 window.navigate = function (route) {
   if (location.hash !== "#" + route) {
     history.replaceState(null, "", "#" + route);
   }
   renderRoute(route);
-  document.getElementById("sidebar").classList.remove("open");
+  setDrawerOpen(false);
 };
 
 /* --- Theme, Mobile Drawer & Keyboard-Navigable Command Palette --- */
@@ -831,7 +838,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("menuToggle").addEventListener("click", () => {
-    document.getElementById("sidebar").classList.toggle("open");
+    const isOpen = document.getElementById("sidebar").classList.contains("open");
+    setDrawerOpen(!isOpen);
+  });
+
+  document.getElementById("drawerBackdrop").addEventListener("click", () => {
+    setDrawerOpen(false);
   });
 
   document.querySelectorAll(".nav-item").forEach((btn) => {
@@ -895,6 +907,7 @@ document.addEventListener("DOMContentLoaded", () => {
       openSearch();
     } else if (e.key === "Escape") {
       modal.classList.remove("open");
+      setDrawerOpen(false);
     }
   });
 
