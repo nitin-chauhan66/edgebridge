@@ -2,12 +2,12 @@
 
 const ROUTE_ORDER = [
   { id: "overview", title: "Overview & Quirks Solved" },
+  { id: "quickstart", title: "Download, Prep & Flash Guide" },
   { id: "hardware", title: "Hardware Pinout & Flash" },
   { id: "architecture", title: "RTOS & Self-Healing" },
   { id: "simulator", title: "Bus Analyzer & t3.5 Lab" },
   { id: "profiles", title: "Device Profiles & Validator" },
   { id: "api", title: "REST API & MQTT" },
-  { id: "deployment", title: "Build, Flash & USB Trap" },
   { id: "verification", title: "Verification & Torture Tests" },
   { id: "licensing", title: "Licensing & Build BOM" }
 ];
@@ -94,6 +94,7 @@ const BUILTIN_PROFILES = {
 
 const SEARCH_INDEX = [
   { title: "Overview & Hardware Quirks Solved", route: "overview", tags: "phase 0 prd waveshare quirks ble sram usb comparison" },
+  { title: "Download, Prepare Hardware, Build & Flash Guide", route: "quickstart", tags: "download release tar.gz prerequisites prepare 120r jumper west init flash com port boot reset monitor mosquitto" },
   { title: "Waveshare Pinout Explorer (GPIO17, 18, 15, 16)", route: "hardware", tags: "pinout rs485 can twai usb cdc gpio21 120r antenna" },
   { title: "16 MB Flash Partition Layout (MCUboot + LittleFS)", route: "hardware", tags: "flash slot0 slot1 scratch nvs_config telemetry_fs" },
   { title: "3-Thread RTOS Architecture & PSRAM Offload", route: "architecture", tags: "threads poller storage mqtt web analyzer sram psram" },
@@ -101,7 +102,6 @@ const SEARCH_INDEX = [
   { title: "Interactive Bus Analyzer & t3.5 Calculator", route: "simulator", tags: "calculator baud turnaround simulator diagnostics can ack" },
   { title: "Built-In Profiles & JSON Validator", route: "profiles", tags: "json profile modbus can registers decoder validate" },
   { title: "REST API & MQTT Telemetry Reference", route: "api", tags: "/api/v1/diagnostics /api/v1/scan /api/v1/config mqtt curl" },
-  { title: "Build, Flash & USB-C Bootloader Recovery", route: "deployment", tags: "west build flash boot reset cdc acm west.yml" },
   { title: "Verification Suite (500-Cut Torture & 7-Day Sim)", route: "verification", tags: "tests asan ubsan torture simulation 3024000" },
   { title: "GNU GPL v3.0 + Commercial Dual-License & BOM", route: "licensing", tags: "license gplv3 commercial oem apache bsd picolibc hal_espressif" }
 ];
@@ -116,6 +116,7 @@ const simState = {
   scanDone: false,
   selectedPin: 0,
   selectedPart: 5,
+  hostOs: "unix",
   activeProfile: "jk_bms_modbus_v1",
   customProfileJson: JSON.stringify(BUILTIN_PROFILES.jk_bms_modbus_v1, null, 2),
   customProfileMsg: null,
@@ -163,8 +164,8 @@ function renderOverview() {
         <h1>Self-Healing RS-485 &amp; CAN Edge Gateway</h1>
         <p>Hardened Zephyr RTOS + MCUboot + LittleFS firmware for the off-the-shelf Waveshare <code>ESP32-S3-RS485-CAN</code>. Solves auto-direction RS-485 clipping, BLE+Wi-Fi SRAM crashes, CAN LED ambiguity, and power-cut storage corruption.</p>
         <div class="form-row">
-          <button class="btn" onclick="navigate('simulator')">Launch Bus Analyzer Lab</button>
-          <button class="btn btn-sec" onclick="navigate('hardware')">Inspect Pinout &amp; Flash</button>
+          <button class="btn" onclick="navigate('quickstart')">Get Started: Download &amp; Flash</button>
+          <button class="btn btn-sec" onclick="navigate('simulator')">Launch Bus Analyzer Lab</button>
           <a class="btn btn-sec" href="https://github.com/nitin-chauhan66/edgebridge/releases/tag/v0.1.0" target="_blank" rel="noopener">v0.1.0 Release</a>
         </div>
       </div>
@@ -660,30 +661,166 @@ function renderApi() {
   `;
 }
 
-function renderDeployment() {
+function renderQuickstart() {
+  const isWin = simState.hostOs === "win";
+  const buildCommands = isWin
+    ? `# 1. Get the source (or extract edgebridge-s3-v0.1.0-phase0-src.tar.gz)
+git clone https://github.com/nitin-chauhan66/edgebridge.git
+cd edgebridge
+
+# 2. Initialize Zephyr v3.7.0 workspace & Espressif RF blobs (first time only)
+west init -l .
+west update
+west blobs fetch hal_espressif
+
+# 3. Generate a local ECDSA-P256 dev key (PowerShell / OpenSSL)
+mkdir keys -Force
+openssl ecparam -name prime256v1 -genkey -noout -out keys\\mcuboot-dev-ecdsa-p256.pem
+
+# 4. Build MCUboot + signed EdgeBridge-S3 firmware
+west build -b esp32s3_devkitm/esp32s3/procpu --sysbuild . -- \`
+  -DDTC_OVERLAY_FILE="$PWD\\boards\\waveshare_esp32s3_rs485_can.overlay" \`
+  -DSB_CONFIG_BOOT_SIGNATURE_KEY_FILE="$PWD\\keys\\mcuboot-dev-ecdsa-p256.pem"`
+    : `# 1. Get the source (or extract edgebridge-s3-v0.1.0-phase0-src.tar.gz)
+git clone https://github.com/nitin-chauhan66/edgebridge.git
+cd edgebridge
+
+# 2. Initialize Zephyr v3.7.0 workspace & Espressif RF blobs (first time only)
+west init -l .
+west update
+west blobs fetch hal_espressif
+
+# 3. Generate local ECDSA-P256 key & build MCUboot + signed app
+chmod +x scripts/gen_dev_keys.sh scripts/build_phase0.sh
+./scripts/build_phase0.sh`;
+
+  const flashCommands = isWin
+    ? `# Find your COM port in Device Manager (e.g. COM7 under Ports)
+west flash --esp-device COM7
+
+# Open USB-C CDC console logs (115200 baud)
+west espressif monitor -p COM7`
+    : `# Linux port is usually /dev/ttyACM0 (macOS: /dev/cu.usbmodem*)
+ls /dev/ttyACM* /dev/cu.usbmodem* 2>/dev/null || true
+
+# Flash both MCUboot + signed slot0 image
+west flash --esp-device /dev/ttyACM0
+
+# View live boot & bus diagnostics over USB-C CDC
+west espressif monitor -p /dev/ttyACM0`;
+
   return `
     <div class="view-header">
-      <div class="eyebrow">Build, Flash &amp; Field Recovery • west.yml &amp; sysbuild.conf</div>
-      <h1>Building, Flashing &amp; USB-C Boot Trap</h1>
-      <p>Initialize the Zephyr v3.7.0 workspace, sign with ECDSA-P256, flash the Waveshare ESP32-S3-RS485-CAN, or run host verification tests.</p>
+      <div class="eyebrow">Developer Guide • End-to-End Setup</div>
+      <h1>Download, Prepare Hardware, Build &amp; Flash</h1>
+      <p>Everything needed to go from an unboxed Waveshare <code>ESP32-S3-RS485-CAN</code> to live RS-485/CAN MQTT telemetry in under 10 minutes.</p>
     </div>
 
-    <h2 class="section-title">1. Initialize Workspace &amp; Build Zephyr Firmware</h2>
-    ${codeBlock("Zephyr v3.7.0 + MCUboot Sysbuild", `west init -l .\nwest update\nwest blobs fetch hal_espressif\n\nchmod +x scripts/gen_dev_keys.sh scripts/build_phase0.sh\n./scripts/build_phase0.sh\nwest flash`)}
-
-    <h2 class="section-title">2. Host C Verification Suite (GCC + ASan + UBSan)</h2>
-    ${codeBlock("Host Test Runner", `cd tests\nchmod +x run_tests.sh\n./run_tests.sh`)}
-
-    <h2 class="section-title">3. Fixing the Native USB-C Bootloader Trap</h2>
-    <div class="callout warn">
-      If flashing over native USB-C stalls at <code>waiting for download...</code>:<br>
-      1. Hold the <strong>BOOT</strong> button on the Waveshare board.<br>
-      2. Tap and release <strong>RESET</strong> while keeping BOOT held.<br>
-      3. Release <strong>BOOT</strong>, then run <code>west flash</code>.<br>
-      4. Press <strong>RESET</strong> once flashing completes. Deferred USB CDC-ACM logging ensures boot never hangs even with no serial monitor attached.
+    <div class="step-card">
+      <div class="step-head"><span class="step-num">1</span><h3>What to Download &amp; Prerequisites</h3></div>
+      <p style="margin-bottom:12px">Release <code>v0.1.0</code> ships the complete verified Phase 0 source bundle and SHA-256 checksums. You compile the signed MCUboot image locally using Zephyr <code>west</code> (or test the C core natively with <code>gcc</code>).</p>
+      <div class="grid-2" style="margin-bottom:14px">
+        <div class="dl-card">
+          <div>
+            <span class="badge badge-info">Source Bundle • 85.5 KB</span>
+            <h3 style="margin:8px 0 4px">edgebridge-s3-v0.1.0-phase0-src.tar.gz</h3>
+            <p>Firmware sources, DeviceTree overlay, JSON profiles, scripts, and test suite.</p>
+          </div>
+          <div class="form-row">
+            <a class="btn" href="https://github.com/nitin-chauhan66/edgebridge/releases/download/v0.1.0/edgebridge-s3-v0.1.0-phase0-src.tar.gz" target="_blank" rel="noopener">Download Source (.tar.gz)</a>
+            <a class="btn btn-sec" href="https://github.com/nitin-chauhan66/edgebridge/releases/download/v0.1.0/SHA256SUMS.txt" target="_blank" rel="noopener">SHA256SUMS.txt</a>
+          </div>
+        </div>
+        <div class="dl-card">
+          <div>
+            <span class="badge badge-ok">Required Hardware &amp; Tools</span>
+            <h3 style="margin:8px 0 4px">Before You Start</h3>
+            <p>
+              • <strong>Board:</strong> Waveshare <code>ESP32-S3-RS485-CAN</code> (16MB Flash / 8MB PSRAM)<br>
+              • <strong>Cable:</strong> USB-C <em>data</em> cable (charge-only cables fail detection)<br>
+              • <strong>Host Tools:</strong> <code>git</code>, Python 3.10+, <code>west</code>, Zephyr SDK <code>0.16.x</code>, <code>openssl</code>, <code>esptool</code>
+            </p>
+          </div>
+          <a class="btn btn-sec" href="https://docs.zephyrproject.org/3.7.0/develop/getting_started/index.html" target="_blank" rel="noopener">Zephyr SDK Setup Docs</a>
+        </div>
+      </div>
+      ${codeBlock("Verify Release Archive Checksum", `sha256sum -c SHA256SUMS.txt\ntar -xzf edgebridge-s3-v0.1.0-phase0-src.tar.gz`)}
     </div>
+
+    <div class="step-card">
+      <div class="step-head"><span class="step-num">2</span><h3>Prepare the Waveshare Hardware</h3></div>
+      <p style="margin-bottom:12px">Before powering up or closing the DIN-rail enclosure inside an inverter/BMS panel, check these physical jumpers and terminals:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Hardware Item</th><th>When to Set</th><th>Action on Waveshare Board</th></tr></thead>
+          <tbody>
+            <tr><td><strong><code>RS485 120R</code> Jumper</strong></td><td>Gateway is at the end of the RS-485 bus</td><td>Set cap to <code>120R</code> (endpoint) or <code>NC</code> (mid-bus / short bench lead)</td></tr>
+            <tr><td><strong><code>CAN 120R</code> Jumper</strong></td><td>Gateway is at the end of the CAN bus</td><td>Set cap to <code>120R</code> (most point-to-point BMS links need 120Ω on both ends)</td></tr>
+            <tr><td><strong>RF Antenna Path</strong></td><td>Inside metal electrical cabinets</td><td>Default uses onboard ceramic antenna; IPEX1 external SMA requires rotating the 0402 RF resistor</td></tr>
+            <tr><td><strong>Bus &amp; Power Wiring</strong></td><td>Before connecting BMS / Inverter</td><td>Wire <code>RS485 A+ / B-</code>, <code>CANH / CANL</code>, and <code>7–36V DC</code> (or USB-C for bench flashing)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-head"><span class="step-num">3</span><h3>Build Signed Firmware (MCUboot + Zephyr v3.7.0)</h3></div>
+      <div class="tabs">
+        <button class="tab-btn ${!isWin ? "active" : ""}" onclick="setHostOs('unix')">Linux / WSL2 / macOS</button>
+        <button class="tab-btn ${isWin ? "active" : ""}" onclick="setHostOs('win')">Windows PowerShell</button>
+      </div>
+      ${codeBlock("Download Zephyr Modules, Generate Key & Build", buildCommands)}
+      <div class="callout ok" style="margin-bottom:0">
+        <strong>Build Output:</strong> Sysbuild produces both the ECDSA-P256 bootloader (<code>build/mcuboot/zephyr/zephyr.bin</code>) and signed primary image (<code>build/edgebridge/zephyr/zephyr.signed.bin</code>).
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-head"><span class="step-num">4</span><h3>Flash Over USB-C &amp; Open Serial Console</h3></div>
+      <p style="margin-bottom:10px">Connect the Waveshare board via USB-C. If the ESP32-S3 does not enter download mode automatically, hold <strong>BOOT</strong>, tap &amp; release <strong>RESET</strong>, then release <strong>BOOT</strong> before running flash.</p>
+      ${codeBlock("Flash & Monitor via USB-C CDC-ACM", flashCommands)}
+      <div class="callout" style="margin-bottom:0">
+        <strong>Expected Boot Log:</strong> <code>EdgeBridge-S3 0.1.0-phase0 ready (Waveshare ESP32-S3-RS485-CAN)</code> followed by <code>Web Bus Analyzer listening on :80</code>.
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-head"><span class="step-num">5</span><h3>First Boot &amp; 5-Minute Field Commissioning</h3></div>
+      <p style="margin-bottom:10px">On a fresh unprovisioned board, EdgeBridge-S3 starts ephemeral BLE provisioning and its local Wi-Fi SoftAP fallback:</p>
+      <ol style="margin:0 0 12px;padding-left:20px;color:var(--md-sys-color-on-surface-variant)">
+        <li>Connect your phone or laptop to Wi-Fi SSID <code>EdgeBridge-S3-AP</code>.</li>
+        <li>Open <code>http://192.168.4.1/</code> to launch the built-in <strong>Web Bus Analyzer</strong>.</li>
+        <li>Click <strong>Auto-Scan RS-485 &amp; CAN</strong> (detects Modbus baud/IDs and listen-only CAN bitrate).</li>
+        <li>Select your BMS/Inverter profile (e.g., <code>jk_bms_modbus_v1</code> or <code>pylontech_can_v1</code>) and click <strong>Load Profile</strong>.</li>
+        <li>Enter your site Wi-Fi SSID/password and MQTT broker, click <strong>Stage &amp; Test (60s)</strong>, then click <strong>Confirm Config Now</strong> before the 60s rollback timer expires.</li>
+      </ol>
+      ${codeBlock("Verify Live Telemetry on MQTT Broker", `mosquitto_sub -h mqtt.local -t "edgebridge/+/telemetry" -v`)}
+    </div>
+
+    <h2 class="section-title">Troubleshooting &amp; FAQ</h2>
+    <details class="faq-item">
+      <summary>Flashing hangs at "Connecting..." or "waiting for download..."</summary>
+      <p>Verify you are using a USB-C data cable, close any open serial monitor holding the COM port, then hold <strong>BOOT</strong>, tap <strong>RESET</strong>, release <strong>RESET</strong>, release <strong>BOOT</strong>, and re-run <code>west flash</code>. On Linux, ensure your user is in the <code>dialout</code> group (<code>sudo usermod -aG dialout $USER</code>).</p>
+    </details>
+    <details class="faq-item">
+      <summary>RS-485 replies are clipped or CRC errors spike above 38,400 bps</summary>
+      <p>Waveshare's isolated transceiver caps around 115,200 bps due to opto/isolator propagation delay. Keep <code>strict_cap=true</code> and increase <code>guard_extra_us</code> (e.g., <code>500–2000 µs</code>) via <code>POST /api/v1/config</code>. EdgeBridge also auto-escalates adaptive margin after consecutive clipped frames.</p>
+    </details>
+    <details class="faq-item">
+      <summary>CAN TX &amp; RX LEDs blink together, but no BMS data arrives</summary>
+      <p>Waveshare CAN transceivers echo their own transmitted frames, making LEDs blink even with no peer ACK. Open <code>http://192.168.4.1/</code> and check the CAN card: if <code>ack_miss &gt; 0</code> or <code>ERROR_PASSIVE</code>, check <code>CANH/CANL</code> polarity, verify the peer BMS bitrate (usually 500 kbps), and enable the <code>CAN 120R</code> jumper.</p>
+    </details>
+    <details class="faq-item">
+      <summary>My new Wi-Fi or baud settings reverted after 60 seconds</summary>
+      <p>That is the anti-lockout 60s Config Watchdog protecting remote units. After staging settings via <code>POST /api/v1/config</code>, always call <code>POST /api/v1/config/confirm</code> (or click <strong>Confirm Config Now</strong> in the Web UI) within 60 seconds.</p>
+    </details>
   `;
 }
+
+window.setHostOs = function (os) {
+  simState.hostOs = os;
+  renderRoute("quickstart");
+};
 
 function renderVerification() {
   const testOut = `[PASS] test_rs485_t35_adaptive_and_transact
@@ -765,12 +902,13 @@ function renderLicensing() {
 
 const ROUTES = {
   overview: renderOverview,
+  quickstart: renderQuickstart,
+  deployment: renderQuickstart,
   hardware: renderHardware,
   architecture: renderArchitecture,
   simulator: renderSimulator,
   profiles: renderProfiles,
   api: renderApi,
-  deployment: renderDeployment,
   verification: renderVerification,
   licensing: renderLicensing
 };
@@ -791,7 +929,8 @@ function renderPager(route) {
 }
 
 function renderRoute(route) {
-  currentRoute = ROUTES[route] ? route : "overview";
+  const normalized = route === "deployment" ? "quickstart" : route;
+  currentRoute = ROUTES[normalized] ? normalized : "overview";
   const html = ROUTES[currentRoute]() + renderPager(currentRoute);
   document.getElementById("appRoot").innerHTML = html;
   document.querySelectorAll(".nav-item").forEach((btn) => {
